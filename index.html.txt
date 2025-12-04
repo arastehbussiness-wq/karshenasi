@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>فرم کارشناسی - نسخه بهینه‌سازی شده</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" />
+
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; background: #f3f4f6; overscroll-behavior: none; }
+        * { font-weight: 600; }
+        h1, h2, h3, .score-val { font-weight: 900; }
+
+        input[type=range] { -webkit-appearance: none; width: 100%; height: 20px; background: transparent; }
+        input[type=range]::-webkit-slider-runnable-track { height: 6px; background: #e5e7eb; border-radius: 5px; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 18px; width: 18px; margin-top: -6px;
+            border-radius: 50%; background: #1e40af; border: 2px solid white; cursor: pointer;
+        }
+
+        .certificate-bg {
+            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-color: #ffffff;
+        }
+
+        @keyframes fadeIn { from { opacity:0; transform:scale(.95);} to {opacity:1; transform:scale(1);} }
+        .animate-pop { animation: fadeIn .3s ease-out; }
+
+        .guide-scroll::-webkit-scrollbar { width: 4px; }
+        .guide-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        /* small responsive tweak */
+        @media (max-width: 420px) {
+            .max-w-md { max-width: 100% !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100">
+
+<div id="app" class="max-w-md mx-auto bg-white shadow-xl h-screen flex flex-col">
+
+    <header class="bg-blue-900 text-white p-3 text-center shadow">
+        <h1 class="text-lg">سیستم هوشمند کارشناسی</h1>
+        <p class="text-[10px] text-blue-200">مشاورین املاک آراسته</p>
+    </header>
+
+    <div id="inputForm" class="flex-grow overflow-y-auto p-3 pb-32">
+
+        <button id="guideBtn" onclick="toggleGuide()" class="w-full bg-yellow-50 text-yellow-700 border border-yellow-200 py-2 rounded text-xs mb-3 flex items-center justify-center gap-2">
+            <i class="fas fa-book-open"></i> راهنمای کدینگ
+        </button>
+
+        <!-- Property Fields -->
+        <div class="grid grid-cols-3 gap-2 bg-blue-50 p-2 rounded border border-blue-100 mb-3">
+            <div>
+                <label class="text-[10px] text-center block">متراژ</label>
+                <input id="inputMetraj" type="number" class="w-full p-1.5 text-sm border rounded text-center" />
+            </div>
+            <div>
+                <label class="text-[10px] text-center block">منطقه</label>
+                <input id="inputZone" type="text" class="w-full p-1.5 text-sm border rounded text-center" />
+            </div>
+            <div>
+                <label class="text-[10px] text-center block">کارشناس</label>
+                <input id="inputExpert" type="text" class="w-full p-1.5 text-sm border rounded text-center" />
+            </div>
+        </div>
+
+        <!-- Rating Items -->
+        <div id="ratingGrid" class="grid grid-cols-2 gap-2"></div>
+
+    </div>
+
+    <div id="stickyFooter" class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t p-3 shadow">
+        <div class="flex justify-between mb-2">
+            <div class="flex items-center gap-1">
+                <span class="text-xs text-blue-800">نمره:</span>
+                <input id="manualTotal" type="number" step="0.1" class="w-16 text-center text-lg font-black bg-yellow-50 border rounded" />
+            </div>
+            <div class="flex items-center gap-1">
+                <span class="text-xs text-blue-800">کد:</span>
+                <input id="fileCodeInput" type="text" class="w-16 text-center text-lg font-black bg-gray-50 border rounded uppercase" />
+            </div>
+        </div>
+        <button id="previewBtn" onclick="generatePreview()" class="w-full py-3 bg-blue-900 text-white rounded shadow text-sm">پیش‌نمایش کارت</button>
+    </div>
+
+</div>
+
+<!-- Preview Modal -->
+<div id="previewCard" class="hidden fixed inset-0 bg-gray-900/90 flex items-center justify-center p-4 z-50">
+    <button id="backBtn" onclick="editForm()" class="absolute top-4 right-4 text-white bg-gray-700/70 px-3 py-1 rounded text-xs">بازگشت</button>
+
+    <div class="bg-white w-full max-w-xs rounded-xl shadow-xl certificate-bg animate-pop overflow-hidden">
+        <div class="h-1.5 bg-gradient-to-r from-yellow-500 to-yellow-300"></div>
+
+        <div class="text-center p-3 border-b">
+            <div class="flex justify-center mb-1">
+                <div class="w-12 h-12 bg-blue-900 rounded-full flex items-center justify-center text-white border-[3px] border-yellow-400">
+                    <i class="fas fa-building"></i>
+                </div>
+            </div>
+            <h2 class="text-base text-blue-900">مشاورین املاک آراسته</h2>
+        </div>
+
+        <div class="p-3">
+            <div class="grid grid-cols-3 text-center border p-2 rounded mb-2">
+                <div><span class="block text-[8px]">متراژ</span><span id="dispMetraj" class="text-[10px] font-bold">-</span></div>
+                <div><span class="block text-[8px]">منطقه</span><span id="dispZone" class="text-[10px] font-bold">-</span></div>
+                <div><span class="block text-[8px]">کارشناس</span><span id="dispExpert" class="text-[10px] font-bold">-</span></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-1" id="grid-container"></div>
+
+            <div class="mt-2 p-2 bg-blue-900 text-white rounded">
+                <div class="flex justify-between border-b pb-1 mb-1">
+                    <span class="text-[9px]">امتیاز</span>
+                    <span id="out-total" class="text-xl font-black text-yellow-400">0.0</span>
+                </div>
+
+                <div class="flex justify-between">
+                    <span class="text-[9px]">کد فایل</span>
+                    <span id="out-code" class="text-xl font-black">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="h-1 bg-gradient-to-r from-yellow-500 to-yellow-300"></div>
+    </div>
+</div>
+
+<script>
+const itemIds = [
+    { id: 'location', label: 'لوکیشن', icon: 'fa-map-marker-alt' },
+    { id: 'plan', label: 'نقشه', icon: 'fa-drafting-compass' },
+    { id: 'material', label: 'متریال', icon: 'fa-gem' },
+    { id: 'common', label: 'مشاعات', icon: 'fa-people-arrows' },
+    { id: 'facade', label: 'نما', icon: 'fa-building' },
+    { id: 'access', label: 'دسترسی', icon: 'fa-road' },
+    { id: 'density', label: 'تراکم منطقه', icon: 'fa-city' },
+    { id: 'price', label: 'ارزندگی قیمت', icon: 'fa-tags' }
+];
+
+// Ensure functions are global and defined before any onclick uses them.
+function toggleGuide() {
+    // simple alert for now (you can expand to a modal)
+    alert('راهنمای کدینگ: شماره فایل‌ها از 101 شروع می‌شود.');
+}
+
+function editForm() {
+    document.getElementById('previewCard').classList.add('hidden');
+    document.getElementById('stickyFooter').classList.remove('hidden');
+}
+
+window.onload = () => {
+    // defaults
+    const fileInput = document.getElementById('fileCodeInput');
+    if (fileInput) fileInput.value = '101';
+    buildRatingGrid();
+    calculateAverage();
+};
+
+function buildRatingGrid() {
+    const grid = document.getElementById('ratingGrid');
+    grid.innerHTML = '';
+
+    itemIds.forEach(item => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'bg-gray-50 p-2 rounded border';
+
+        wrapper.innerHTML = `
+            <div class="flex justify-between mb-1">
+                <div class="flex items-center gap-1 w-full">
+                    <i class="fas ${item.icon} text-blue-400 text-xs"></i>
+                    <input type="text" id="label-${item.id}" value="${item.label}" class="text-xs bg-transparent w-full">
+                </div>
+                <span id="val-${item.id}" class="text-blue-800 text-sm">5</span>
+            </div>
+            <input type="range" id="${item.id}" min="1" max="10" value="5" oninput="updateVal('${item.id}')">
+        `;
+
+        grid.appendChild(wrapper);
+    });
+}
+
+function updateVal(id) {
+    const valEl = document.getElementById(id);
+    const displayEl = document.getElementById(`val-${id}`);
+    if (!valEl || !displayEl) return;
+    displayEl.innerText = valEl.value;
+    calculateAverage();
+}
+
+function calculateAverage() {
+    let total = 0;
+    let count = 0;
+    itemIds.forEach(item => {
+        const el = document.getElementById(item.id);
+        if (!el) return;
+        const v = parseInt(el.value) || 0;
+        total += v;
+        count++;
+    });
+    const avg = count ? (total / count).toFixed(1) : '0.0';
+    const manual = document.getElementById('manualTotal');
+    if (manual) manual.value = avg;
+    return avg;
+}
+
+function generatePreview() {
+    // Build preview content and show modal
+    const container = document.getElementById('grid-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    itemIds.forEach(item => {
+        const val = document.getElementById(item.id)?.value || '0';
+        const labelText = document.getElementById(`label-${item.id}`)?.value || item.label;
+
+        const card = document.createElement('div');
+        card.className = 'p-2 bg-gray-50 rounded border flex flex-col';
+
+        card.innerHTML = `
+            <div class="flex items-center gap-2 mb-1">
+                <i class="fas ${item.icon} text-blue-400 text-sm"></i>
+                <div class="flex-1 text-[10px]">${labelText}</div>
+                <div class="text-xs font-black text-blue-900">${val}</div>
+            </div>
+            <div class="h-2 bg-gray-200 rounded overflow-hidden">
+                <div style="width: ${Math.max(0, Math.min(100, val * 10))}%" class="h-full bg-gradient-to-r from-sky-400 to-blue-900"></div>
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
+
+    // Fill meta
+    const metraj = document.getElementById('inputMetraj')?.value || '-';
+    const zone = document.getElementById('inputZone')?.value || '-';
+    const expert = document.getElementById('inputExpert')?.value || '-';
+    const finalScore = calculateAverage();
+    const fileCode = document.getElementById('fileCodeInput')?.value || '-';
+
+    document.getElementById('dispMetraj').innerText = metraj ? metraj + ' متر' : '-';
+    document.getElementById('dispZone').innerText = zone;
+    document.getElementById('dispExpert').innerText = expert;
+    document.getElementById('out-total').innerText = finalScore;
+    document.getElementById('out-code').innerText = fileCode;
+
+    // Show preview modal and hide footer
+    document.getElementById('previewCard').classList.remove('hidden');
+    document.getElementById('stickyFooter').classList.add('hidden');
+}
+
+// defensive: ensure functions exist in global scope for onclick handlers
+window.toggleGuide = toggleGuide;
+window.generatePreview = generatePreview;
+window.editForm = editForm;
+
+</script>
+</body>
+</html>
